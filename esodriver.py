@@ -10,8 +10,6 @@ from time import sleep
 from sys import argv
 import re
 
-
-
 def create_driver_session(session_id, executor_url):
     from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
     # Save the original function, so we can revert our patch
@@ -37,7 +35,7 @@ if len(argv) < 3 :
     driver.get("https://www.esosuite.net/")
     url = driver.command_executor._url  
     session_id = driver.session_id      
-    print(url + " " + session_id + "\n")
+    print(argv[0] + " " + url + " " + session_id + "\n")
     if len(argv) == 2:
         while 1:
             sleep(1)
@@ -54,8 +52,7 @@ def sk(xpath, keys):
         try:
             e = driver.find_element_by_xpath(xpath)
             e.clear()
-            #e.send_keys(Keys.HOME)
-            print(keys)
+            #print(keys)
             e.send_keys(keys)
             return
         except Exception as e:
@@ -63,10 +60,13 @@ def sk(xpath, keys):
             print(e)
             sleep(.2)
 
-
 def exists(xpath):
     return len(driver.find_elements_by_xpath(xpath)) > 0 
 
+def ss(id, text):
+    xp = '//*[@field-ref="' + id + '"]'
+    cl(xp)
+    sk('//input[@ng-model="searchString"]', text)
 
 def cl(xpath):
     for n in range(50):
@@ -79,118 +79,65 @@ def cl(xpath):
             print(e)
             sleep(.2)
 
-while 1:
     ps = str(driver.page_source)
 
+try:
+    driver.find_element_by_xpath('//shelf-panel//button[text()="OK"]').click()
+except:
+    0
 
-    try:    
-        driver.find_element_by_name("username").click()
-        driver.find_element_by_name("username").send_keys("jevans")
-        #driver.find_element_by_name("password").sendkeys("jevans2")
-        #driver.find_element_by_name("agency").sendkeys("tukwilafd")
-    except Exception as e:
-        0 #        print(e)
+cl('//label[text()="Basic"]')
 
-    try:
-        driver.find_element_by_xpath('//shelf-panel//button[text()="OK"]').click()
-    except:
-        0
+# simple ones
+ss("INCIDENTTYPEID", "3211\n");
+ss("STATIONID", "54\n")
+ss("ACTIONTAKEN1", "32\n")
+ss("AIDGIVENORRECEIVEDID", "n\n")
+ss("LOCATIONTYPEID", "address\n")
+ss("PROPERTYUSEID", "000\n")
+ss("OFFICERINCHARGEAGENCYPERSONID", "EVANS\n")
+cl('//eso-yes-no[@field-ref="WORKINGFIRE"]//button[@data-val="false"]')
+sk('//eso-text[@field-ref="ALARMS"]//input', "1\n")
+sk('//eso-text[@field-ref="REPORTWRITERASSIGNMENT"]//input', "officer\n")
 
-    if 0:
-        for unit in range(1, 3):
-            cl('(//grid-cell[@class="unit-info-cell"])[' + str(unit) + ']')
+# complicated ones 
+if exists('//eso-single-select[@field-ref="COVID19FACTORID"]//button[text()="No"]'):
+    cl('//eso-single-select[@field-ref="COVID19FACTORID"]//button[text()="No"]')
+else: 
+    cl('//eso-single-select[@field-ref="COVID19FACTORID"]')
+    sk('//input[@ng-model="searchString"]', "3\n")
 
-            cl('//eso-single-select[@field-ref="UNITRESPONDINGFROMID"]')
-            sk('//input[@ng-model="searchString"]', "in\n")
-            cl('//edit-unit-report-toast//button[text()="OK"]')
+cl('//eso-address-summary[@field-label="\'Address\'"]')
+sk('//eso-zip-input//input', [Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE, 
+    "98168\n"])
+cl('//shelf-panel//button[text()="OK"]')
 
-        break
 
-    if 1:
-        cl('//label[text()="Basic"]')
+cl('//eso-date[@field-ref="OFFICERINCHARGEDATE"]')
+sk('//eso-masked-input//input', [Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE, 
+    "10272021\n"])
 
-        cl('//eso-single-select[@field-ref="INCIDENTTYPEID"]')
-        sk('//input[@ng-model="searchString"]', "3211\n")
+cl('//eso-date[@field-ref="REPORTWRITERDATE"]')
+sk('//eso-masked-input//input', [Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE, 
+        "10272021\n"])
 
-        cl('//eso-yes-no[@field-ref="WORKINGFIRE"]//button[@data-val="false"]')
+sk('//eso-text[@field-ref="NARRATIVEREMARKS"]//textarea[@type="text"]', "See EMS report.\n")
+sleep(1)
+cl('//label[text()="Basic"]')
 
-        if exists('//eso-single-select[@field-ref="COVID19FACTORID"]//button[text()="No"]'):
-            cl('//eso-single-select[@field-ref="COVID19FACTORID"]//button[text()="No"]')
-        else: 
-            cl('//eso-single-select[@field-ref="COVID19FACTORID"]')
-            sk('//input[@ng-model="searchString"]', "3\n")
-    
-        sk('//eso-text[@field-ref="ALARMS"]//input', "1\n")
-    
-        cl('//eso-single-select[@field-ref="STATIONID"]')
-        sk('//input[@ng-model="searchString"]', "54\n")
+# Click on unit reports tab, wait for it to load 
+cl('//label[text()="Unit Reports"]')
+cl('//grid-cell[@class="unit-info-cell"]')
+cl('//edit-unit-report-toast//button[text()="OK"]')
 
-        cl('//eso-single-select[@field-ref="ACTIONTAKEN1"]')
-        sk('//input[@ng-model="searchString"]', "32\n")
-
-        cl('//eso-single-select[@field-ref="AIDGIVENORRECEIVEDID"]')
-        sk('//input[@ng-model="searchString"]', "n\n")
-
-        cl('//eso-single-select[@field-ref="LOCATIONTYPEID"]')
-        sk('//input[@ng-model="searchString"]', "address\n")
-
-        cl('//eso-address-summary[@field-label="\'Address\'"]')
-        sk('//eso-zip-input//input', [Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE, 
-            "98168\n"])
-        cl('//shelf-panel//button[text()="OK"]')
-
-        cl('//eso-single-select[@field-ref="PROPERTYUSEID"]')
-        sk('//input[@ng-model="searchString"]', "000\n")
-
-        sk('//eso-text[@field-ref="REPORTWRITERASSIGNMENT"]//input', "officer\n")
-        
-        cl('//eso-single-select[@field-ref="OFFICERINCHARGEAGENCYPERSONID"]')
-        sk('//input[@ng-model="searchString"]', "EVANS\n")
-
-        cl('//eso-date[@field-ref="OFFICERINCHARGEDATE"]')
-        sk('//eso-masked-input//input', [Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE, 
-            "10272021\n"])
-    
-        cl('//eso-date[@field-ref="REPORTWRITERDATE"]')
-        sk('//eso-masked-input//input', [Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE, 
-                "10272021\n"])
-    
-        sk('//eso-text[@field-ref="NARRATIVEREMARKS"]//textarea[@type="text"]', "See EMS report.\n")
-        sleep(1)
-        cl('//label[text()="Basic"]')
-
-        cl('//label[text()="Unit Reports"]')
-        cl('//grid-cell[@class="unit-info-cell"]')
+for unit in range(1, 5):
+    ugrid = '(//grid-cell[@class="unit-info-cell"])[' + str(unit) + ']'
+    if exists(ugrid):
+        cl(ugrid)
+        ss("UNITRESPONDINGFROMID", "in\n")
+        ss("UNITPRIORITYID", "emer\n")
+        ss("UNITACTIONTAKEN1", "32\n")
         cl('//edit-unit-report-toast//button[text()="OK"]')
 
-        for unit in range(1, 3):
-            ugrid = '(//grid-cell[@class="unit-info-cell"])[' + str(unit) + ']'
-            if exists(ugrid):
-                cl(ugrid)
-                
-                cl('//eso-single-select[@field-ref="UNITRESPONDINGFROMID"]')
-                sk('//input[@ng-model="searchString"]', "in\n")
-            
-                cl('//eso-single-select[@field-ref="UNITPRIORITYID"]')
-                sk('//input[@ng-model="searchString"]', "emer\n")
-            
-                cl('//eso-single-select[@field-ref="UNITACTIONTAKEN1"]')
-                sk('//input[@ng-model="searchString"]', "32\n")
-
-                cl('//edit-unit-report-toast//button[text()="OK"]')
-
-        cl('//label[text()="Validation Issues"]')
-
-
-
-        break
-        #e = driver.find_element_by_xpath('//eso-single-select[@field-ref="INCIDENTTYPEID"]')
-        #e.click()   
-        #e = driver.find_element_by_xpath('//input[@ng-model="searchString"]')
-        #e.send_keys("3211\n")
-    #except Exception as e:
-        print(e)
-
-    
-    sleep(1)
+cl('//label[text()="Validation Issues"]')
 
