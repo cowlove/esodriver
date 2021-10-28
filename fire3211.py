@@ -4,8 +4,35 @@ import re
 import eso
 from eso import *
 from datetime import date
+from tkinter import *
+from tkinter import simpledialog
 
-user="EVANS"
+class MyDialog(simpledialog.Dialog):
+    def __init__(self, master):
+        self.okPressed = False
+        simpledialog.Dialog.__init__(self, master,title="ESO Crusher")
+
+    def body(self, master):
+        Label(master, text="Name   :").grid(row=0)
+        Label(master, text="Station:").grid(row=1)
+
+        self.name = StringVar(root, value='EVANS')
+        self.station = StringVar(root, value='54')
+        self.e1 = Entry(master,textvariable=self.name)
+        self.e2 = Entry(master,textvariable=self.station)
+        self.e1.grid(row=0, column=1)
+        self.e2.grid(row=1, column=1)
+        return self.e1 # initial focus
+
+    def apply(self):
+        self.okPressed = True
+
+root = Tk()
+root.withdraw()
+d = MyDialog(root)
+if not d.okPressed: 
+    exit()
+
 date=date.today().strftime("%m%d%Y")
 
 driver = eso.begin()
@@ -16,12 +43,12 @@ cl('//label[text()="Basic"]')
 
 # simple ones
 ss("INCIDENTTYPEID", "3211\n");
-ss("STATIONID", "54\n")
+ss("STATIONID", d.station.get() + "\n")
 ss("ACTIONTAKEN1", "32\n")
 ss("AIDGIVENORRECEIVEDID", "n\n")
 ss("LOCATIONTYPEID", "address\n")
 ss("PROPERTYUSEID", "000\n")
-ss("OFFICERINCHARGEAGENCYPERSONID", user + "\n")
+ss("OFFICERINCHARGEAGENCYPERSONID", d.name.get() + "\n")
 cl('//eso-yes-no[@field-ref="WORKINGFIRE"]//button[@data-val="false"]')
 sk('//eso-text[@field-ref="ALARMS"]//input', "1\n")
 sk('//eso-text[@field-ref="REPORTWRITERASSIGNMENT"]//input', "officer\n")
