@@ -1,28 +1,17 @@
 #!/usr/bin/python3
-from selenium import webdriver  
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.expected_conditions import presence_of_element_located
-from selenium.webdriver.support.ui import Select
-from selenium.webdriver.common.action_chains import ActionChains
 from time import sleep
 import re
 import eso
 from eso import *
+from datetime import date
 
 user="EVANS"
-date="10272021"
+date=date.today().strftime("%m%d%Y")
 
 driver = eso.begin()
-
 ps = str(driver.page_source)
 
-try:
-    driver.find_element_by_xpath('//shelf-panel//button[text()="OK"]').click()
-except:
-    0
-
+cl('//shelf-panel//button[text()="OK"]', tmo=1) 
 cl('//label[text()="Basic"]')
 
 # simple ones
@@ -56,7 +45,7 @@ sk('//eso-masked-input//input', [Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE
 
 cl('//eso-date[@field-ref="REPORTWRITERDATE"]')
 sk('//eso-masked-input//input', [Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE, 
-        date + "\n"])
+    date + "\n"])
 
 sk('//eso-text[@field-ref="NARRATIVEREMARKS"]//textarea[@type="text"]', "See EMS report.\n")
 sleep(1)
@@ -64,7 +53,7 @@ cl('//label[text()="Basic"]')
 
 # Click on unit reports tab, wait for it to load 
 cl('//label[text()="Unit Reports"]')
-cl('//grid-cell[@class="unit-info-cell"]')
+cl('//grid-cell[@class="unit-info-cell"]',tmo=20.0)
 cl('//edit-unit-report-toast//button[text()="OK"]')
 
 for unit in range(1, 5):

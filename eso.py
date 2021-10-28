@@ -9,7 +9,6 @@ from selenium.webdriver.common.action_chains import ActionChains
 from time import sleep
 import re
 
-
 def create_driver_session(session_id, executor_url):
     from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
     # Save the original function, so we can revert our patch
@@ -49,8 +48,10 @@ def begin():
     wait = WebDriverWait(driver, 10)    
     return driver
 
-def sk(xpath, keys):
-    for n in range(50):
+sleep_granularity = .2
+default_timeout = 10.0
+def sk(xpath, keys, tmo = default_timeout):
+    for n in range(int(tmo/sleep_granularity)):
         try:
             e = driver.find_element_by_xpath(xpath)
             e.clear()
@@ -60,18 +61,18 @@ def sk(xpath, keys):
         except Exception as e:
             print(xpath)
             print(e)
-            sleep(.2)
+            sleep(sleep_granularity)
 
 def exists(xpath):
     return len(driver.find_elements_by_xpath(xpath)) > 0 
 
-def ss(id, text):
+def ss(id, text, tmo=default_timeout):
     xp = '//*[@field-ref="' + id + '"]'
-    cl(xp)
-    sk('//input[@ng-model="searchString"]', text)
+    cl(xp, tmo)
+    sk('//input[@ng-model="searchString"]', text, tmo)
 
-def cl(xpath):
-    for n in range(50):
+def cl(xpath, tmo=default_timeout):
+    for n in range(int(tmo/sleep_granularity)):
         try:
             e = driver.find_element_by_xpath(xpath)
             e.click()
@@ -79,4 +80,4 @@ def cl(xpath):
         except Exception as e:
             print(xpath)
             print(e)
-            sleep(.2)
+            sleep(sleep_granularity)
