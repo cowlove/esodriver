@@ -50,7 +50,36 @@ def begin():
 
 sleep_granularity = .2
 default_timeout = 10.0
+sleep_delay = .1
+
+def yesno(fc, ans):
+    print("Checking yes/no '" + fc + "'")
+    if not exists('//*[@field-config="' + fc + '"]//button[@class="btn radio-btn selected"]'):
+        cl('//*[@field-config="' + fc + '"]//span[text()="' + ans + '"]')
+
+
+def cl(xpath, tmo=default_timeout):
+    global sleep_granularity
+    global sleep_delay 
+
+    sleep(sleep_delay)    
+    print("Clicking on for " + xpath)
+    for n in range(int(tmo/sleep_granularity)):
+        try:
+            e = driver.find_element_by_xpath(xpath)
+            e.click()
+            return
+        except Exception as e:
+            print("Click on " + xpath)
+            print(e)
+            sleep(sleep_granularity)
+
+
 def sk(xpath, keys, tmo = default_timeout):
+    global sleep_granularity
+    global sleep_delay 
+
+    sleep(sleep_delay)    
     for n in range(int(tmo/sleep_granularity)):
         try:
             e = driver.find_element_by_xpath(xpath)
@@ -66,23 +95,54 @@ def sk(xpath, keys, tmo = default_timeout):
 def exists(xpath):
     return len(driver.find_elements_by_xpath(xpath)) > 0 
 
+def waitfor(xpath, tmo=default_timeout):
+    print("Waiting for " + xpath)
+    for n in range(int(tmo/sleep_granularity)):
+        try:
+            e = driver.find_element_by_xpath(xpath)
+            return True
+        except Exception as e:
+            print(e)
+            sleep(sleep_granularity)
+    return False
+
 # single-select tweaked for EMS page, with horrible translate() hack for case insensitivity
 def ssEms(id, text, tmo=default_timeout):
+    print("Single-select '" + id + "' => '" + text + "'")
+    already = True
 
-    if exists('//*[@field-config="' + id + '"]/div/div[@class="eso-hide"]/div[@class="quick-picks"]'):
-        print("single-select '" + id + "' already picked")
-        return
+    # check if quick-pick button is hidden
+    if exists('//*[@field-config="' + id + '"]//div[@class="display-value"]'):
+        e = driver.find_element_by_xpath('//*[@field-config="' + id + '"]//div[@class="display-value"]')
+        if e.text == "":
+            print ("Empty display value on single-select")
+            already = False
 
-    print ("single-select '" + id + "' found blank, setting value to '" + text + "'")
-    xp = '//*[@field-config="' + id + '"]'
-    cl(xp, tmo)     # click once to select any value
-    cl(xp, .2)      # click again to bring up the search pick menu 
-    sk('//input[@ng-model="searchString"]', text, tmo)
-    #sleep(1)
-    cl('//eso-single-select-panel//li//div//mark[contains(' + 
-        'translate(text(), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"),' +
-        'translate("' + text + '", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"))]', tmo)
-    #cl('//eso-single-select-panel//li//div//mark[text()="' + text + '"]')
+    if exists('//*[@field-config="' + id + '"]/div/div[@class=""]/div[@class="quick-picks"]/button'):
+        print ("Visible pick buttons")
+        cl('//*[@field-config="' + id + '"]//button', 2)     # click one button to select any value
+        already = False
+
+    if already:
+        print ("Already filled, skipping")
+    else:
+        print ("single-select '" + id + "' found blank, setting value to '" + text + "'")
+        cl('//*[@field-config="' + id + '"]', 2)      # click again to bring up the search pick menu 
+        
+        sk('//input[@ng-model="searchString"]', text, tmo)
+        #sleep(1)
+        if (exists("//eso-single-select-panel")): 
+            cl('//eso-single-select-panel//li//div//mark[contains(' + 
+                'translate(text(), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"),' +
+                'translate("' + text + '", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"))]', tmo)
+            cl('//eso-single-select-shelf//button[text()="OK"]', tmo=.5) 
+        else: 
+            cl('//eso-multi-select-panel//li//div//mark[contains(' + 
+                'translate(text(), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"),' +
+                'translate("' + text + '", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"))]', tmo)
+            cl('//eso-multi-select-shelf//button[text()="OK"]', tmo=.5) 
+
+        
 
 
 def ss(id, text, tmo=default_timeout):
@@ -90,23 +150,3 @@ def ss(id, text, tmo=default_timeout):
     cl(xp, tmo)
     sk('//input[@ng-model="searchString"]', text, tmo)
 
-def cl(xpath, tmo=default_timeout):
-    for n in range(int(tmo/sleep_granularity)):
-        try:
-            e = driver.find_element_by_xpath(xpath)
-            e.click()
-            return
-        except Exception as e:
-            print(xpath)
-            print(e)
-            sleep(sleep_granularity)
-
-def waitfor(xpath, tmo=default_timeout):
-    for n in range(int(tmo/sleep_granularity)):
-        try:
-            e = driver.find_element_by_xpath(xpath)
-            return
-        except Exception as e:
-            print(xpath)
-            print(e)
-            sleep(sleep_granularity)

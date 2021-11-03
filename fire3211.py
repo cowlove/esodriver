@@ -97,20 +97,33 @@ def emsReport():
     global date
     global driver
 
+
+    # Click out of any shelf trays that happen to be up 
     cl('//shelf-panel//button[text()="OK"]', tmo=.5) 
     cl('//shelf-panel//button[text()="OK"]', tmo=.5) 
+
+    ###################################################33
+    # INCIDENT tab
     cl('//li[@class="incident incident-bg"]')
     sleep(1)
     
-    # TODO: figure ou how to tell if eso-single-select is already filled in 
     ssEms("incident.response.runTypeId", "911")
     ssEms("incident.response.priorityId", "Emer")
     ssEms("incident.response.stationId", d.station.get())
     ssEms("incident.response.respondingFromZoneID", "In")
     ssEms("incident.response.requestedByItemID", "Patient")
+    ssEms("incident.response.dispositionItemID", "Pt Care T")
+    ssEms("incident.disposition.dispositionItemID", "Patient Treated, Trans")
+    ssEms("incident.disposition.transportMethodID", "Ambulance")
+    ssEms("incident.disposition.transportDueToItemIDs", "Patient")
+    ssEms("incident.disposition.transferredToLocationTypeID", "Ground")
+    ssEms("incident.disposition.transferredToLocationID", "Tri")
+    ssEms("incident.destination.predefinedAddress.predefinedLocationID", "Valley")
+    ssEms("incident.scene.manualAddress.locationTypeID", "Home")
 
-    # Still working on xpath syntax 
-    #cl('//eso-radio-list[@field-config="incident.response.isFirstUnitOnSceneID"]//*[text()="Yes"]')
+    yesno("incident.response.isFirstUnitOnSceneID", "Yes")
+    yesno("incident.scene.massCasualty", "No")
+
 
     # Set PPE for people 
     for unit in range(1, 5):
@@ -126,38 +139,54 @@ def emsReport():
             cl('//shelf-panel//button[text()="OK"]') 
             cl('//shelf-panel//button[text()="OK"]') 
         
-    
-    if 0:  # Experiental stuff messing with Validate button 
-        cl('//button[@class="validate check-circle-white-bg"]')
-        waitfor('//shelf-panel//button[text()="OK"]') 
-        sleep(5)
-        if exists('//strong[text()="At Patient"]'):
-            print ("AT PATIENT")
-
     # Handle missing "at-patient" time 
     if (exists('//span[text()="At Patient"]/../span[text()="- -"]')):
         e = driver.find_element_by_xpath('(//span[text()="On Scene"]/../span)[2]')
         # Add 3 minutes to "On Scene" time 
-        t = e.text.split(':')
-        t[1] = str(int(t[1]) + 3)
-        if int(t[1]) >= 60:
-            t[0] = str(int(t[0]) + 1)
-        newTime = "".join(t)
-        cl('//button[text()="Set Times"]')
-        sk('//time-entry[@label="At Patient"]//eso-masked-input//input', newTime + "\n")
+        try: 
+            t = e.text.split(':')
+            t[1] = str(int(t[1]) + 3)
+            if int(t[1]) >= 60:
+                t[0] = str(int(t[0]) + 1)
+            newTime = "".join(t)
+            print ("No at patient time, setting to " + newTime)
+            cl('//button[text()="Set Times"]')
+            sk('//time-entry[@label="At Patient"]//eso-masked-input//input', [Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE,Keys.BACK_SPACE, 
+                newTime])
+            cl('//shelf-panel//button[text()="OK"]') 
+        except Exception as e:
+            print(e)
 
-
+    ###################################################33
+    # PATIENT tab
     cl('//li[@class="patient patient-bg"]')
     sleep(1)
     ssEms("patient.demographics.ethnicityId", "Not")
+    ssEms("patient.demographics.genderId", "Male")
 
+    ###################################################33
+    # NARRATIVE tab
     cl('//li[@class="narrative narrative-bg"]')
     sleep(1)
     ssEms("narrative.clinicalImpression.medicalTraumaId", "Trauma")
+    ssEms("narrative.clinicalImpression.primaryImpressionId", "Injury of Face")
 
+    # Add a sign/sympt if one doens't yet texist 
+    ssBut = "((//narrative-signs-symptoms//grid-row)[1]/grid-cell)[1]/button"
+    if exists(ssBut):
+        cl(ssBut)
+        ssEms("narrative.supportingSignsAndSymptoms.signsAndSymptoms.supportPrimaryId", "Injuries")
+        ssEms("narrative.supportingSignsAndSymptoms.signsAndSymptoms.supportSignId", "Injury")
+        cl('//shelf-panel//button[text()="OK"]', tmo=.5) 
 
+    
+    ###################################################33
+    # SIGNATURES TAB tab
+    # Make signature array with output from http://ramkulkarni.com/blog/record-and-playback-drawing-in-html5-canvas-part-ii/ 
+    # and this: 
+    # tr '}' '\n'  | perl -e 'while(<>){if(/"x":(\d+),"y":(\d+)/ && $count++ % 5 == 0) { $x=$1-$lx;$y=$2-$ly; $lx=$1;$ly=$2; print "[$x,$y],"; }}'
+    # 
 
-    # Handle signatures tab 
     cl('//li[@class="signatures signatures-bg"]')
     sleep(1)
     cl('//div[text()="Provider Signatures"]')
@@ -172,15 +201,25 @@ def emsReport():
         #//eso-signature-pad//canvas')
         drawing = ActionChains(driver)\
             .move_to_element_with_offset(canvas, 120, -382) \
-            .click_and_hold() \
-            .move_by_offset(100, -100) \
-            .move_by_offset(100, +100) \
-            .release()
+            .click_and_hold()
+        for p in (
+            [-20,-32],[-8,-51],[4,-53],[19,-8],[16,118],[-20,58],[-31,32],[-8,-2],[77,-95],[19,-16],[5,-3],[-6,16],        
+            ):
+            drawing = drawing.move_by_offset(p[0], p[1])
+        drawing.release()
 
         drawing.perform()
         cl('//eso-signature-dialog//button[text()="OK"]') 
     cl('//shelf-panel//button[text()="OK"]') 
-    
+
+    ###################################################33
+    # VALIDATE button Experiental stuff messing with Validate button
+    if 0:  
+        cl('//button[@class="validate check-circle-white-bg"]')
+        waitfor('//shelf-panel//button[text()="OK"]') 
+        sleep(5)
+        if exists('//strong[text()="At Patient"]'):
+            print ("AT PATIENT")
 
 
 while True:
