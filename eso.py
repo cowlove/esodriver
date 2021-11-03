@@ -66,6 +66,25 @@ def sk(xpath, keys, tmo = default_timeout):
 def exists(xpath):
     return len(driver.find_elements_by_xpath(xpath)) > 0 
 
+# single-select tweaked for EMS page, with horrible translate() hack for case insensitivity
+def ssEms(id, text, tmo=default_timeout):
+
+    if exists('//*[@field-config="' + id + '"]/div/div[@class="eso-hide"]/div[@class="quick-picks"]'):
+        print("single-select '" + id + "' already picked")
+        return
+
+    print ("single-select '" + id + "' found blank, setting value to '" + text + "'")
+    xp = '//*[@field-config="' + id + '"]'
+    cl(xp, tmo)     # click once to select any value
+    cl(xp, .2)      # click again to bring up the search pick menu 
+    sk('//input[@ng-model="searchString"]', text, tmo)
+    #sleep(1)
+    cl('//eso-single-select-panel//li//div//mark[contains(' + 
+        'translate(text(), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"),' +
+        'translate("' + text + '", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"))]', tmo)
+    #cl('//eso-single-select-panel//li//div//mark[text()="' + text + '"]')
+
+
 def ss(id, text, tmo=default_timeout):
     xp = '//*[@field-ref="' + id + '"]'
     cl(xp, tmo)
@@ -76,6 +95,16 @@ def cl(xpath, tmo=default_timeout):
         try:
             e = driver.find_element_by_xpath(xpath)
             e.click()
+            return
+        except Exception as e:
+            print(xpath)
+            print(e)
+            sleep(sleep_granularity)
+
+def waitfor(xpath, tmo=default_timeout):
+    for n in range(int(tmo/sleep_granularity)):
+        try:
+            e = driver.find_element_by_xpath(xpath)
             return
         except Exception as e:
             print(xpath)
