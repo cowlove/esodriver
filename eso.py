@@ -57,7 +57,6 @@ def yesno(fc, ans):
     if not exists('//*[@field-config="' + fc + '"]//button[@class="btn radio-btn selected"]'):
         cl('//*[@field-config="' + fc + '"]//span[text()="' + ans + '"]')
 
-
 def cl(xpath, tmo=default_timeout):
     global sleep_granularity
     global sleep_delay 
@@ -108,16 +107,17 @@ def waitfor(xpath, tmo=default_timeout):
 
 # single-select tweaked for EMS page, with horrible translate() hack for case insensitivity
 def ssEms(id, text, tmo=default_timeout):
-    print("Single-select '" + id + "' => '" + text + "'")
+    print("Checking single-select '" + id + "' => '" + text + "'")
     already = True
 
-    # check if quick-pick button is hidden
+    # check if single-select box is empty
     if exists('//*[@field-config="' + id + '"]//div[@class="display-value"]'):
         e = driver.find_element_by_xpath('//*[@field-config="' + id + '"]//div[@class="display-value"]')
         if e.text == "":
             print ("Empty display value on single-select")
             already = False
 
+    # check if single-select box is quick-pick, with buttons showing (ie: nothing selected)
     if exists('//*[@field-config="' + id + '"]/div/div[@class=""]/div[@class="quick-picks"]/button'):
         print ("Visible pick buttons")
         cl('//*[@field-config="' + id + '"]//button', 2)     # click one button to select any value
