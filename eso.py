@@ -48,9 +48,9 @@ def begin():
     wait = WebDriverWait(driver, 10)    
     return driver
 
-sleep_granularity = .2
+sleep_granularity = .3
 default_timeout = 10.0
-sleep_delay = .1
+sleep_delay = .3
 
 def yesno(fc, ans):
     print("Checking yes/no '" + fc + "'")
