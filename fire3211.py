@@ -106,6 +106,7 @@ def emsReport():
     # INCIDENT tab
     cl('//li[@class="incident incident-bg"]')
     sleep(1)
+ 
     
     ssEms("incident.response.runTypeId", "911")
     ssEms("incident.response.priorityId", "Emer")
@@ -124,6 +125,14 @@ def emsReport():
     yesno("incident.response.isFirstUnitOnSceneID", "Yes")
     yesno("incident.scene.massCasualty", "No")
 
+	# Pick 98168 zip code 
+    cl('//button[@class="btn icon-btn search-bg"]')
+    cl('//td[text()="98168"]')
+    
+
+#<button class="btn icon-btn search-bg" ng-class="{ searching: searching, 'search-bg': !isInternational, 'search-gray-bg': isInternational }" ng-click="search($event)" ng-disabled="isInternational"></button>
+
+#/html/body/emr-app/div/emr-app-body/main/incident-tab/emr-main-view/main-viewport/field-set[2]/eso-location/div[2]/eso-address/table[2]/tbody/tr[2]/td[2]/table/tbody/tr/td[2]/button
 
     # Set PPE for people 
     for unit in range(1, 5):
@@ -200,7 +209,7 @@ def emsReport():
         canvas = driver.find_element_by_xpath('//div[@class="signing-area-container"]')
         #//eso-signature-pad//canvas')
         drawing = ActionChains(driver)\
-            .move_to_element_with_offset(canvas, 120, -382) \
+            .move_to_element_with_offset(canvas, 120, -482) \
             .click_and_hold()
         for p in (
             [-20,-32],[-8,-51],[4,-53],[19,-8],[16,118],[-20,58],[-31,32],[-8,-2],[77,-95],[19,-16],[5,-3],[-6,16],        
