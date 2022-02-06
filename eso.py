@@ -50,7 +50,7 @@ def begin():
 
 sleep_granularity = .3
 default_timeout = 10.0
-sleep_delay = .3
+sleep_delay = .4
 
 def yesno(fc, ans):
     print("Checking yes/no '" + fc + "'")
