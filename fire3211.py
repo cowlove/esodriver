@@ -166,6 +166,7 @@ def emsReport():
     cl('//li[@class="incident incident-bg"]')
      
 
+ 
     waitforClick('//button[text()="CAD Import"]')
     waitforClick('//button[text()="Update data"]')
     waitforClick('//button[text()="Refresh with new data"]')
@@ -185,6 +186,7 @@ def emsReport():
         ssEms("incident.disposition.transferredToLocationID", "Tri")
         ssEms("incident.destination.predefinedAddress.predefinedLocationID", d.hospital.get())
     else:
+        cl('//button[text()="Other"]')
         ssEms("incident.response.dispositionItemID", "No Treatment")
 
     ssEms("incident.scene.manualAddress.locationTypeID", "Home")
@@ -215,7 +217,19 @@ def emsReport():
                     cl(x)
             cl('//shelf-panel//button[text()="OK"]') 
             cl('//shelf-panel//button[text()="OK"]') 
+
+
+        # TODO d.name.get() doesn't work, does it have a <CR>?
+        # TODO blindly clicks, will deselect if a role is already selected 
         
+        x = '(//incident-crew//grid-row//div[@class="name"])[' + str(unit) + '][contains(text(), "' + d.name.get() + '")]'
+        x = '(//incident-crew//grid-row//div[@class="name"])[' + str(unit) + '][contains(text(), "EVA")]'
+        if (exists(x)):
+            cl('(//incident-crew//grid-row)[' + str(unit) + ']//grid-cell[2]')
+        else:
+            cl('(//incident-crew//grid-row)[' + str(unit) + ']//grid-cell[4]')
+
+
     # Handle missing "at-patient" time 
     if (exists('//span[text()="At Patient"]/../span[text()="- -"]')):
         e = driver.find_element_by_xpath('(//span[text()="On Scene"]/../span)[2]')
